@@ -1031,22 +1031,12 @@
         }
 
         // Ouvrir un chat de groupe
-        function openGroupChat(groupId, initial) {
-            handleGroupChange(groupId);
-            
-            const group = groups.find(g => g.id === groupId);
-            document.getElementById('groupName').textContent = group.name;
+           function openGroupChat(groupId, initial) {
+            currentGroupId = groupId;
+            const groupName = document.querySelector(`.chat-item[onclick*="${groupId}"] .chat-name`).textContent;
+            document.getElementById('groupName').textContent = groupName;
             document.getElementById('groupAvatar').textContent = initial;
-            
-            // Écouter les changements de présence pour ce groupe
-            database.ref(`presence/${groupId}`).on('value', (snapshot) => {
-                const users = snapshot.val() || {};
-                updateOnlineMembersList(groupId, users);
-                updateOnlineCount(groupId, Object.keys(users).length);
-            });
-            
-            // Mark as read
-            markGroupAsRead(groupId);
+            document.getElementById('groupMembers').textContent = "0 membres en ligne";
             
             // Vider les messages
             document.getElementById('messagesContainer').innerHTML = `
@@ -1070,7 +1060,7 @@
             if (window.innerWidth <= 768) {
                 toggleSidebar();
             }
-        }
+           }
 
         // Basculer entre la sidebar et la zone de chat (mobile)
         function toggleSidebar() {
