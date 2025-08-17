@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - Chat Médical</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .signup-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0088cc;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .google-btn {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .google-btn:hover {
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,136,204,0.3);
+            border-radius: 50%;
+            border-top-color: #0088cc;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            background-color: #fde8e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="logo">Chat Médical</div>
+        <h1>Connectez-vous à votre compte</h1>
+        <p>Accédez à la plateforme de communication médicale sécurisée</p>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <button class="google-btn" id="googleSignInBtn">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="google-icon" alt="Google Logo">
+            <span id="btnText">Continuer avec Google</span>
+        </button>
+        
+        <div class="footer">
+            En vous connectant, vous acceptez nos <a href="#" style="color: #0088cc;">conditions d'utilisation</a> et notre <a href="#" style="color: #0088cc;">politique de confidentialité</a>.
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCOYAQ6XMLYeqpn_JQwZUTZEMre5UX3NfU",
+            authDomain: "megastore-dc68d.firebaseapp.com",
+            databaseURL: "https://megastore-dc68d-default-rtdb.firebaseio.com",
+            projectId: "megastore-dc68d",
+            storageBucket: "megastore-dc68d.appspot.com",
+            messagingSenderId: "600548950505",
+            appId: "1:600548950505:web:08248cdb2a1d8e5b0dcb78",
+            measurementId: "G-RRL5NF4LGY"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // DOM Elements
+        const googleSignInBtn = document.getElementById('googleSignInBtn');
+        const btnText = document.getElementById('btnText');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Google Sign-In
+        googleSignInBtn.addEventListener('click', signInWithGoogle);
+        
+        function signInWithGoogle() {
+            errorMessage.style.display = 'none';
+            btnText.innerHTML = '<div class="loading-spinner"></div> Connexion en cours...';
+            googleSignInBtn.disabled = true;
+            
+            const provider = new firebase.auth.GoogleAuthProvider();
+            
+            firebase.auth().signInWithPopup(provider)
+                .then((result) => {
+                    // User signed in
+                    const user = result.user;
+                    
+                    // Determine user role based on email
+                    const isDoctor = user.email.endsWith('@medical.com');
+                    
+                    // Store user data in localStorage
+                    localStorage.setItem('medicalChatUser', JSON.stringify({
+                        id: user.uid,
+                        name: user.displayName,
+                        email: user.email,
+                        photoURL: user.photoURL,
+                        role: isDoctor ? 'doctor' : 'member'
+                    }));
+                    
+                    // Redirect to chat page
+                    window.location.href = 'index.html';
+                })
+                .catch((error) => {
+                    console.error("Error signing in: ", error);
+                    
+                    let errorMessageText = "Une erreur est survenue lors de la connexion";
+                    
+                    // Handle specific errors
+                    switch(error.code) {
+                        case 'auth/popup-blocked':
+                            errorMessageText = "Le popup de connexion a été bloqué. Veuillez autoriser les popups pour ce site.";
+                            break;
+                        case 'auth/network-request-failed':
+                            errorMessageText = "Problème de réseau. Veuillez vérifier votre connexion internet.";
+                            break;
+                        case 'auth/operation-not-allowed':
+                            errorMessageText = "La connexion avec Google n'est pas activée. Contactez l'administrateur.";
+                            break;
+                        case 'auth/cancelled-popup-request':
+                        case 'auth/popup-closed-by-user':
+                            errorMessageText = "La fenêtre de connexion a été fermée. Veuillez réessayer.";
+                            break;
+                    }
+                    
+                    errorMessage.textContent = errorMessageText;
+                    errorMessage.style.display = 'block';
+                    btnText.textContent = 'Continuer avec Google';
+                    googleSignInBtn.disabled = false;
+                });
+        }
+        
+        // Check if user is already logged in
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in, redirect to chat
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Check for authentication errors in URL
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const authError = urlParams.get('authError');
+            
+            if (authError) {
+                errorMessage.textContent = decodeURIComponent(authError);
+                errorMessage.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
